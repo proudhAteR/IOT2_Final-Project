@@ -5,7 +5,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
-
 class Services
 {
 private:
@@ -42,17 +41,16 @@ public:
     {
         PubSubClient client(wifiClient);
         const char *domain = "broker.emqx.io";
-        const char *topic = getTopic(); // the topic will vary in function of the ongoing class
-
+        const char *topic = getTopic();
         while (!client.connected())
         {
             client.setServer(domain, 1883);
             Serial.println("Attempting Connection");
-            if (client.connect("Christian"))
+            if (client.connect("C1201_Card_Scanner"))
             {
                 client.subscribe(topic);
                 Serial.println("Connected");
-                // client.setCallback(getPayload); //The function to call
+                // client.setCallback(getPayload); The function to call
             }
             else
             {
@@ -66,9 +64,17 @@ public:
 private:
     const char *getTopic()
     {
+        //{"Sunday = 0", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
         int weekday = getWeekDay();
-        const char *stringWd = getWeekDayAsString(weekday);
+        const char *ongoingClass = getOngoingClass();
     };
+
+private:
+    const char *getOngoingClass()
+    {
+        // make a system that recognize that this class takes place at this time.
+        // TODO : Make a singleton that will represent the list of courses in that local
+    }
 
 private:
     int getWeekDay()
@@ -80,11 +86,11 @@ private:
     }
 
 private:
-    const char *getWeekDayAsString(int wd)
-    {
-        const char *days[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-        return days[wd];
-    };
+    int getCurrentHour(){
+        time_t currentTime = time(0);
+        tm *now = localtime(&currentTime);
+        
+        return now->tm_hour; 
+    }
 };
-
 #endif
