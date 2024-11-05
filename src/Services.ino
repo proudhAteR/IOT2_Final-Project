@@ -1,142 +1,143 @@
-
 #ifndef SERVICES_H
 #define SERVICES_H
 
-#include <Arduino.h>
+#include "Arduino.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <malloc.h>
-
+#include <time.h>
 #include "Course.ino"
-class Services
+
+// Constants
+const char *NO_CLASS_MESSAGE = "No ongoing class found";
+const int NUM_CLASSES = 3;
+
+
+// Structure definition for the Service
+typedef struct
 {
-private:
-    const char *NO_CLASS_MESSAGE = "No ongoing class found";
-    const int NUM_CLASSES = 3;
-    const char *ssid = "";
-    const char *password = "";
-    static Course *classes;
+    const char *ssid;
+    const char *password;
+    Course *classes;
+} Services;
 
-public:
-    Services(const char *ssid, const char *password)
-    {
-        this->ssid = ssid;
-        this->password = password;
+// Function declarations
+Course *getRoomClasses();
+void connectToNetwork(const char *ssid, const char *password);
+void connectToBroker(WiFiClient wifiClient, Services *service);
+const char *getTopic(Services *service);
+bool isOngoingClass(int index, Services *service);
+boolean isInClassRange(Course course, int currentHour);
+boolean isSameDay(Course course, int weekDay);
+int getCurrentWeekDay();
+int getCurrentHour();
 
-        classes = (Course *)malloc(NUM_CLASSES * sizeof(Course));
-
-        memcpy(this->classes, getRoomClasses(), sizeof(Course) * NUM_CLASSES);
-        connectToNetWork(ssid, password);
+// Functions
+Course *getRoomClasses()
+{
+    static Course roomClasses[2] = {
+        {"Mobile", 5, 8, 11},
+        {"IOT", 2, 15, 18}
     };
+    return roomClasses;
+}
 
-private:
-    Course *getRoomClasses()
+void initializeService(Services *service, const char *ssid, const char *password)
+{
+    service->ssid = ssid;
+    service->password = password;
+    service->classes = (Course *)malloc(NUM_CLASSES * sizeof(Course));
+    memcpy(service->classes, getRoomClasses(), sizeof(Course) * NUM_CLASSES);
+
+    connectToNetwork(ssid, password);
+}
+
+void connectToNetwork(const char *ssid, const char *password)
+{
+    Serial.begin(9600);
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
     {
-        static Course roomClasses[3] =
-            {
-                Course("Mobile", 8, 11, 4),
-                Course("IOT", 15, 18, 2),
-                Course("POO2", 8, 11, 1)
-            };
-
-        return roomClasses;
+        Serial.print(".");
+        delay(1000);
     }
+    Serial.println("\nConnected to the WiFi network");
+    Serial.print("ESP32 IP: ");
+    Serial.println(WiFi.localIP());
+}
 
-private:
-    void connectToNetWork(const char *ssid, const char *password)
+void connectToBroker(WiFiClient wifiClient, Services *service)
+{
+    PubSubClient client(wifiClient);
+    const char *domain = "broker.emqx.io";
+    const char *topic = getTopic(service);
+
+    while (!client.connected())
     {
-        Serial.begin(9600);
-        WiFi.begin(ssid, password);
-        while (WiFi.status() != WL_CONNECTED)
+        client.setServer(domain, 1883);
+        if (client.connect("C1201_Card_Scanner"))
         {
-            Serial.print(".");
-            delay(1000);
-        }
-
-        Serial.println("\nConnected to the WiFi network");
-        Serial.print("ESP32 IP: ");
-        Serial.println(WiFi.localIP());
-    }
-
-public:
-    void connectToBroker(WiFiClient wifiClient)
-    {
-        PubSubClient client(wifiClient);
-        const char *domain = "broker.emqx.io";
-        const char *topic = getTopic();
-
-        while (!client.connected())
-        {
-            client.setServer(domain, 1883);
-            if (client.connect("C1201_Card_Scanner"))
+            if (topic != NO_CLASS_MESSAGE)
             {
-                if (topic != NO_CLASS_MESSAGE)
-                {
-                    client.subscribe(topic);
-                    Serial.println("Connected");
-                    // client.setCallback(getPayload); The function to call
-                }
-                else
-                {
-                    // TODO : RED LIGHT
-                }
+                client.subscribe(topic);
+                Serial.println("Connected");
+                // client.setCallback(getPayload); // Function to call
             }
             else
             {
-                delay(3000);
+                // TODO: RED LIGHT
             }
         }
-    };
-
-private:
-    const char *getTopic()
-    {
-        for (int i = 0; i < NUM_CLASSES; i++)
+        else
         {
-            if (isOngoingClass(i))
-            {
-                static char buffer[256];
-                sprintf(buffer, "C1201/%S", this->classes[i].getClassName());
-
-                return buffer;
-            }
+            Serial.println(".");
+            delay(3000);
         }
-        return this->NO_CLASS_MESSAGE;
     }
-    bool isOngoingClass(int i)
-    {
-        return isInClassRange(this->classes[i], getCurrentHour()) && isSameDay(this->classes[i], getWeekDay());
-    };
+}
 
-private:
-    boolean isInClassRange(Course course, int currentHour)
+const char *getTopic(Services *service)
+{
+    for (int i = 0; i < NUM_CLASSES; i++)
     {
-        return course.getStartingHour() <= currentHour && course.getEndHour() > currentHour;
-    };
-
-private:
-    boolean isSameDay(Course course, int weekDay)
-    {
-        return weekDay == course.getWeekDay();
+        if (isOngoingClass(i, service))
+        {
+            static char buffer[256];
+            sprintf(buffer, "C1201/%s", getClassName(&service->classes[i]));
+            return buffer;
+        }
     }
+    return NO_CLASS_MESSAGE;
+}
 
-private:
-    int getWeekDay()
-    {
-        //{"Sunday = 0", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-        time_t currentTime = time(0);
-        tm *now = localtime(&currentTime);
+bool isOngoingClass(int index, Services *service)
+{
+    return isInClassRange(service->classes[index], getCurrentHour()) &&
+           isSameDay(service->classes[index], getCurrentWeekDay());
+}
 
-        return now->tm_wday;
-    };
+boolean isInClassRange(Course course, int currentHour)
+{
+    return getStartingHour(&course) <= currentHour && getEndHour(&course) > currentHour;
+}
 
-private:
-    int getCurrentHour()
-    {
-        time_t currentTime = time(0);
-        tm *now = localtime(&currentTime);
+boolean isSameDay(Course course, int weekDay)
+{
+    return weekDay == getCurrentWeekDay();
+}
+int getCurrentWeekDay()
+{
+    // {"Sunday = 0", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    time_t currentTime = time(0);
+    struct tm *now = localtime(&currentTime);
+    return now->tm_wday;
+}
 
-        return now->tm_hour;
-    };
-};
+int getCurrentHour()
+{
+    time_t currentTime = time(0);
+    struct tm *now = localtime(&currentTime);
+    return now->tm_hour;
+}
+
 #endif

@@ -3,39 +3,37 @@
 
 #include <Arduino.h>
 
-class Course
+// Define the Course structure
+typedef struct
 {
     const char *name;
     int weekDay;
     int startingHour;
     int endHour;
+} Course;
 
-public:
-    Course(const char *name, int startingHour, int endHour, int weekday)
-    {
-        this->name = name;
-        this->weekDay = weekDay;
-        this->startingHour = startingHour;
-    }
+// Function to get the starting hour
+int getStartingHour(Course *course)
+{
+    return course->startingHour;
+}
 
-    public :
-    int getStartingHour(){
-        return this-> startingHour;
-    }
-    public :
-    int getEndHour(){
-        return this-> endHour;
-    }
+// Function to get the end hour
+int getEndHour(Course *course)
+{
+    return course->endHour;
+}
 
-    public :
-    int getWeekDay(){
-        return this-> weekDay;
-    }
+// Function to get the weekday
+int getWeekDay(Course *course)
+{
+    return course->weekDay;
+}
 
-    public :
-    const char* getClassName(){
-        return this-> name;
-    }
-};
+// Function to get the class name
+const char *getClassName(Course *course)
+{
+    return course->name;
+}
 
 #endif

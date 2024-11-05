@@ -3,17 +3,20 @@
 // put function declarations here:
 int myFunction(int, int);
 
+Services myServ;
+WiFiClient wifiClient;
+
 void setup()
 {
-  const char *netName = "Cegeplabs";
-  const char *password = "Cegepdept";
+  const char *SCHOOL_NET_NAME = "Cegeplabs";
+  const char *SCHOOL_PWD = "Cegepdept";
 
-  int result = myFunction(2, 3);
-  Services services(netName, password);
+  initializeService(&myServ, SCHOOL_NET_NAME, SCHOOL_PWD);
+  connectToBroker(wifiClient, &myServ);
 }
 void loop()
 {
-  // put your main code here, to run repeatedly:
+
 }
 
 // put function definitions here:
