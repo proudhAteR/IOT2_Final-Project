@@ -16,7 +16,18 @@ void setup()
 }
 void loop()
 {
-
+  Serial.println(getTopic(&myServ));
+  delay(30000);
+}
+void printLocalTime()
+{
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo))
+  {
+    Serial.println("Failed to obtain time");
+    return;
+  }
+  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
 // put function definitions here:

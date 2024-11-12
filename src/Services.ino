@@ -12,7 +12,6 @@
 const char *NO_CLASS_MESSAGE = "No ongoing class found";
 const int NUM_CLASSES = 3;
 
-
 // Structure definition for the Service
 typedef struct
 {
@@ -37,8 +36,7 @@ Course *getRoomClasses()
 {
     static Course roomClasses[2] = {
         {"Mobile", 5, 8, 11},
-        {"IOT", 2, 15, 18}
-    };
+        {"IOT", 2, 15, 20}};
     return roomClasses;
 }
 
@@ -61,9 +59,6 @@ void connectToNetwork(const char *ssid, const char *password)
         Serial.print(".");
         delay(1000);
     }
-    Serial.println("\nConnected to the WiFi network");
-    Serial.print("ESP32 IP: ");
-    Serial.println(WiFi.localIP());
 }
 
 void connectToBroker(WiFiClient wifiClient, Services *service)
@@ -71,8 +66,9 @@ void connectToBroker(WiFiClient wifiClient, Services *service)
     PubSubClient client(wifiClient);
     const char *domain = "broker.emqx.io";
     const char *topic = getTopic(service);
+    boolean connected;
 
-    while (!client.connected())
+    while (!client.connected() || !connected)
     {
         client.setServer(domain, 1883);
         if (client.connect("C1201_Card_Scanner"))
@@ -80,18 +76,19 @@ void connectToBroker(WiFiClient wifiClient, Services *service)
             if (topic != NO_CLASS_MESSAGE)
             {
                 client.subscribe(topic);
-                Serial.println("Connected");
+                connected = true;
                 // client.setCallback(getPayload); // Function to call
             }
             else
             {
-                // TODO: RED LIGHT
+                connected = false;
+                delay(10000);
             }
         }
         else
         {
             Serial.println(".");
-            delay(3000);
+            delay(10000);
         }
     }
 }
@@ -137,6 +134,8 @@ int getCurrentHour()
 {
     time_t currentTime = time(0);
     struct tm *now = localtime(&currentTime);
+    setenv("TZ", "EST5EDT", 1);
+    tzset();
     return now->tm_hour;
 }
 
