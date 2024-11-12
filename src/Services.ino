@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <time.h>
 #include "Course.ino"
+#include <ESP32Time.h>
 
 // Constants
 const char *NO_CLASS_MESSAGE = "No ongoing class found";
@@ -48,6 +49,7 @@ void initializeService(Services *service, const char *ssid, const char *password
     memcpy(service->classes, getRoomClasses(), sizeof(Course) * NUM_CLASSES);
 
     connectToNetwork(ssid, password);
+    configTime((3600 * (-5)), 3600, "pool.ntp.org");
 }
 
 void connectToNetwork(const char *ssid, const char *password)
@@ -64,14 +66,17 @@ void connectToNetwork(const char *ssid, const char *password)
 void connectToBroker(WiFiClient wifiClient, Services *service)
 {
     PubSubClient client(wifiClient);
-    const char *domain = "broker.emqx.io";
-    const char *topic = getTopic(service);
+    const char *esp_id = "C1201_Card_Scanner";
+    const char *domain = "35.183.155.93";
+    const char *username = "ecosystem-connecte";
+    const char *pass = "Omega123*";
     boolean connected;
 
     while (!client.connected() || !connected)
     {
+        const char *topic = getTopic(service);
         client.setServer(domain, 1883);
-        if (client.connect("C1201_Card_Scanner"))
+        if (client.connect(esp_id, username, pass))
         {
             if (topic != NO_CLASS_MESSAGE)
             {
@@ -81,6 +86,7 @@ void connectToBroker(WiFiClient wifiClient, Services *service)
             }
             else
             {
+                Serial.print(".");
                 connected = false;
                 delay(10000);
             }
@@ -120,7 +126,7 @@ boolean isInClassRange(Course course, int currentHour)
 
 boolean isSameDay(Course course, int weekDay)
 {
-    return weekDay == getCurrentWeekDay();
+    return weekDay == getWeekDay(&course);
 }
 int getCurrentWeekDay()
 {
@@ -132,10 +138,9 @@ int getCurrentWeekDay()
 
 int getCurrentHour()
 {
+
     time_t currentTime = time(0);
     struct tm *now = localtime(&currentTime);
-    setenv("TZ", "EST5EDT", 1);
-    tzset();
     return now->tm_hour;
 }
 

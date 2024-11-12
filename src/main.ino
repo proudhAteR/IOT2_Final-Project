@@ -16,8 +16,6 @@ void setup()
 }
 void loop()
 {
-  Serial.println(getTopic(&myServ));
-  delay(30000);
 }
 void printLocalTime()
 {
