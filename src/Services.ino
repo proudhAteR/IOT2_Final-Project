@@ -18,7 +18,7 @@ typedef struct
 {
     const char *ssid;
     const char *password;
-    Course *classes;
+    Course classes[2];
 } Services;
 
 // Function declarations
@@ -45,8 +45,8 @@ void initializeService(Services *service, const char *ssid, const char *password
 {
     service->ssid = ssid;
     service->password = password;
-    service->classes = (Course *)malloc(NUM_CLASSES * sizeof(Course));
-    memcpy(service->classes, getRoomClasses(), sizeof(Course) * NUM_CLASSES);
+    service->classes[0] = {"Mobile", 5, 8, 11};
+    service->classes[1] = {"IOT", 2, 15, 20};
 
     connectToNetwork(ssid, password);
     configTime((3600 * (-5)), 3600, "pool.ntp.org");

@@ -1,7 +1,5 @@
 #include <Arduino.h>
 #include "Services.ino"
-// put function declarations here:
-int myFunction(int, int);
 
 Services myServ;
 WiFiClient wifiClient;
@@ -16,20 +14,4 @@ void setup()
 }
 void loop()
 {
-}
-void printLocalTime()
-{
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo))
-  {
-    Serial.println("Failed to obtain time");
-    return;
-  }
-  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-}
-
-// put function definitions here:
-int myFunction(int x, int y)
-{
-  return x + y;
 }
