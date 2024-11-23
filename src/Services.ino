@@ -8,6 +8,7 @@
 #include <time.h>
 #include "Course.ino"
 #include <ESP32Time.h>
+#include <ArduinoJson.h>
 
 // Constants
 const char *NO_CLASS_MESSAGE = "No ongoing class found";
@@ -71,6 +72,7 @@ void connectToBroker(WiFiClient wifiClient, Services *service)
     const char *username = "ecosystem-connecte";
     const char *pass = "Omega123*";
     boolean connected;
+    JsonDocument data;
 
     while (!client.connected() || !connected)
     {
@@ -82,7 +84,8 @@ void connectToBroker(WiFiClient wifiClient, Services *service)
             {
                 client.subscribe(topic);
                 connected = true;
-                // client.setCallback(getPayload); // Function to call
+                data["message"] = "hello";
+                client.publish(topic, data["message"]); //TODO: change hello for the data read in the nfc card
             }
             else
             {
@@ -138,7 +141,6 @@ int getCurrentWeekDay()
 
 int getCurrentHour()
 {
-
     time_t currentTime = time(0);
     struct tm *now = localtime(&currentTime);
     return now->tm_hour;
