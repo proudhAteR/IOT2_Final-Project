@@ -15,9 +15,10 @@ void setup()
 }
 void loop()
 {
-  if (isCardPresent())
+  if (isCardPresent() && canReadUID())
   {
     Serial.println("card");
     displayCardType();
+    delay(3500);
   }
 }

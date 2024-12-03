@@ -16,7 +16,8 @@ const int NUM_CLASSES = 3;
 
 // Structure definition for the Service
 typedef struct
-{   const char *ssid;
+{
+    const char *ssid;
     const char *password;
     Course classes[2];
 } Services;
@@ -84,7 +85,7 @@ void connectToBroker(WiFiClient wifiClient, Services *service)
                 client.subscribe(topic);
                 connected = true;
                 data["message"] = "hello";
-                client.publish(topic, data["message"]); //TODO: change hello for the data read in the nfc card
+                client.publish(topic, data["message"]); // TODO: change hello for the data read in the nfc card
             }
             else
             {
