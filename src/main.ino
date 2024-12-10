@@ -13,7 +13,7 @@ void setup()
   const char *HOME_PWD = "16241561101Cmr";
 
   initializeService(&myServ, SCHOOL_NET_NAME, SCHOOL_PWD);
-  connectToBroker(client, &myServ);
+  //connectToBroker(client, &myServ);
   nfc_init();
 }
 void loop()

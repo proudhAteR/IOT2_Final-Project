@@ -36,8 +36,7 @@ void initializeService(Services *service, const char *ssid, const char *password
 {
     service->ssid = ssid;
     service->password = password;
-    service->classes[0] = {"Mobile", 5, 8, 11};
-    service->classes[1] = {"IOT", 2, 12, 23};
+    service->classes[0] = {"IOT", 2, 4, 23};
 
     connectToNetwork(ssid, password);
     configTime((3600 * (-5)), 3600, "pool.ntp.org");
