@@ -21,8 +21,11 @@ void loop()
   if (isCardPresent() && canReadUID())
   {
     displayCardType();
-    Serial.println(readData().c_str());
-    client.publish(getTopic(&myServ), readData().c_str());
+    String result = readData();
+    const char *t =  getTopic(&myServ);
+    Serial.println(result.c_str()); // Works because `result` is valid
+    Serial.println(t); 
+    client.publish(t, result.c_str());
     halt();
     delay(2000);
   }

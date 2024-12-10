@@ -32,16 +32,14 @@ boolean isSameDay(Course course, int weekDay);
 int getCurrentWeekDay();
 int getCurrentHour();
 
-
 void initializeService(Services *service, const char *ssid, const char *password)
 {
     service->ssid = ssid;
     service->password = password;
     service->classes[0] = {"Mobile", 5, 8, 11};
-    service->classes[1] = {"IOT", 2, 1, 23};
+    service->classes[1] = {"IOT", 2, 12, 23};
 
     connectToNetwork(ssid, password);
-    Serial.println("Connected!");
     configTime((3600 * (-5)), 3600, "pool.ntp.org");
 }
 
@@ -68,12 +66,13 @@ void connectToBroker(PubSubClient client, Services *service)
     {
         const char *topic = getTopic(service);
         client.setServer(domain, 1883);
-        if (client.connect(esp_id, username, pass))
+        if (client.connect(esp_id))
         {
             if (topic != NO_CLASS_MESSAGE)
             {
                 client.subscribe(topic);
                 connected = true;
+                Serial.println("connected to the broker");
                 client.publish(topic, esp_id); // TODO: change hello for the data read in the nfc card
             }
             else

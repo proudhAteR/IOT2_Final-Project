@@ -5,7 +5,6 @@
 #include "Services.ino"
 #include <MFRC522.h>
 #include "SPI.h"
-#include <NfcAdapter.h>
 
 void nfc_init();
 boolean isCardPresent();
@@ -28,7 +27,6 @@ MFRC522 RFID(SS_PIN, RST_PIN);
 MFRC522::StatusCode status;
 MFRC522::MIFARE_Key key;
 
-NfcAdapter nfc = NfcAdapter(&RFID);
 
 byte buffer[18];
 byte size = sizeof(buffer);
@@ -41,7 +39,6 @@ void nfc_init()
     Serial.begin(9600);
     SPI.begin();
     RFID.PCD_Init();
-    nfc.begin();
     for (byte i = 0; i < 6; i++)
     {
         key.keyByte[i] = 0xFF; // Default key for MIFARE Classic
@@ -107,22 +104,29 @@ String parseNDEFMessage(byte *data, int length)
 
     byte typeLength = data[5];
     byte payloadLength = data[6];
-    char type[typeLength + 1];
-    char payload[payloadLength + 1];
+    byte langLength = data[7 + typeLength]; // Language code length
 
-    // Extract Type (e.g., "T" for Text record)
-    memcpy(type, &data[7], typeLength);
-    type[typeLength] = '\0';
+    if (payloadLength <= langLength)
+    {
+        return "Invalid payload length!";
+    }
 
     // Extract Payload
-    byte langLength = data[7 + typeLength]; // Language code length
-    memcpy(payload, &data[8 + typeLength + langLength], payloadLength - langLength);
-    payload[payloadLength - langLength] = '\0';
+    int actualPayloadLength = payloadLength - langLength;
+    char payload[actualPayloadLength]; // +1 for null-terminator
+    memcpy(payload, &data[8 + typeLength + langLength], actualPayloadLength);
+    payload[actualPayloadLength] = '\0'; // Add null-terminator
+    String res;
+    // Debugging: Print raw payload data
+    for (int i = 0; i < actualPayloadLength - 1; i++)
+    {
+        res += payload[i];
+    }
 
-    // Combine into readable string
-    String result = payload;
-    return result;
+    return String(res); 
 }
+
+
 
 int readBlock(int blockNumber, byte arrayAddress[])
 {
