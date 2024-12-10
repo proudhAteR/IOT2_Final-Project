@@ -8,7 +8,6 @@
 #include <time.h>
 #include "Course.ino"
 #include <ESP32Time.h>
-#include <ArduinoJson.h>
 
 // Constants
 const char *NO_CLASS_MESSAGE = "No ongoing class found";
@@ -33,23 +32,16 @@ boolean isSameDay(Course course, int weekDay);
 int getCurrentWeekDay();
 int getCurrentHour();
 
-// Functions
-Course *getRoomClasses()
-{
-    static Course roomClasses[2] = {
-        {"Mobile", 5, 8, 11},
-        {"IOT", 2, 15, 20}};
-    return roomClasses;
-}
 
 void initializeService(Services *service, const char *ssid, const char *password)
 {
     service->ssid = ssid;
     service->password = password;
     service->classes[0] = {"Mobile", 5, 8, 11};
-    service->classes[1] = {"IOT", 2, 15, 20};
+    service->classes[1] = {"IOT", 2, 1, 23};
 
     connectToNetwork(ssid, password);
+    Serial.println("Connected!");
     configTime((3600 * (-5)), 3600, "pool.ntp.org");
 }
 
@@ -64,15 +56,13 @@ void connectToNetwork(const char *ssid, const char *password)
     }
 }
 
-void connectToBroker(WiFiClient wifiClient, Services *service)
+void connectToBroker(PubSubClient client, Services *service)
 {
-    PubSubClient client(wifiClient);
     const char *esp_id = "C1201_Card_Scanner";
     const char *domain = "35.183.155.93";
     const char *username = "ecosystem-connecte";
     const char *pass = "Omega123*";
     boolean connected;
-    JsonDocument data;
 
     while (!client.connected() || !connected)
     {
@@ -84,20 +74,19 @@ void connectToBroker(WiFiClient wifiClient, Services *service)
             {
                 client.subscribe(topic);
                 connected = true;
-                data["message"] = "hello";
-                client.publish(topic, data["message"]); // TODO: change hello for the data read in the nfc card
+                client.publish(topic, esp_id); // TODO: change hello for the data read in the nfc card
             }
             else
             {
-                Serial.print(".");
+                Serial.print(topic);
                 connected = false;
-                delay(10000);
+                delay(5000);
             }
         }
         else
         {
-            Serial.println(".");
-            delay(10000);
+            Serial.println("not connected to the broker");
+            delay(5000);
         }
     }
 }
