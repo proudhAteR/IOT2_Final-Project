@@ -1,32 +1,52 @@
 #include <Arduino.h>
-#include "Services.ino"
+#include "Service.ino"
 #include "nfcService.ino"
-Services myServ;
+Service myServ;
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 
 void setup()
 {
   const char *SCHOOL_NET_NAME = "Cegeplabs";
-  const char *HOME_NET_NAME = "Otter's club";
+  const char *HOME_NET_NAME = "Otter";
   const char *SCHOOL_PWD = "Cegepdept";
-  const char *HOME_PWD = "16241561101Cmr";
+  const char *HOME_PWD = "123456789";
 
-  initializeService(&myServ, SCHOOL_NET_NAME, SCHOOL_PWD);
-  //connectToBroker(client, &myServ);
+  initializeService(&myServ, HOME_NET_NAME, HOME_PWD);
+  connectToBroker(client, &myServ);
   nfc_init();
 }
 void loop()
 {
   if (isCardPresent() && canReadUID())
   {
+    // TODO: blue light
     displayCardType();
+
     String result = readData();
-    const char *t =  getTopic(&myServ);
-    Serial.println(result.c_str()); // Works because `result` is valid
-    Serial.println(t); 
-    client.publish(t, result.c_str());
+    if (isMessageValid(result))
+    {
+      publishData(result.c_str());
+    }
+    else
+    {
+      // TODO: red light
+    }
     halt();
     delay(2000);
   }
+}
+
+void publishData(const char *message)
+{
+  const char *t = getTopic(&myServ);
+  
+  Serial.println(t);
+  Serial.println(message);
+  client.publish(t, message);
+}
+
+bool isMessageValid(String result)
+{
+  return !result.equals("");
 }

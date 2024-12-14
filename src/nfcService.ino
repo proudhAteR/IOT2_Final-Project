@@ -2,7 +2,7 @@
 #define NFC_H
 
 #include "Arduino.h"
-#include "Services.ino"
+#include "Service.ino"
 #include <MFRC522.h>
 #include "SPI.h"
 
@@ -28,15 +28,12 @@ MFRC522::StatusCode status;
 MFRC522::MIFARE_Key key;
 
 
-byte buffer[18];
-byte size = sizeof(buffer);
 
 byte blockAddr = 4;
 byte readbackblock[18];
 
 void nfc_init()
 {
-    Serial.begin(9600);
     SPI.begin();
     RFID.PCD_Init();
     for (byte i = 0; i < 6; i++)
@@ -77,6 +74,12 @@ String readData()
     }
 
     String message = parseNDEFMessage(combinedBuffer, sizeof(combinedBuffer));
+
+    if (message.length() > 7)
+    {
+        return "";
+    }
+    
 
     return message;
 }
