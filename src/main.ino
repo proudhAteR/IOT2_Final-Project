@@ -24,10 +24,7 @@ void loop()
   {
     processCard();
   }
-  else
-  {
-    handleFailure();
-  }
+  
 }
 
 void processCard()
@@ -52,13 +49,13 @@ void handleSuccess(String result)
 {
   successSignal();
   publishData(result.c_str());
-  delay(1000);
+  delay(750);
 }
 
 void handleFailure()
 {
   failureSignal();
-  delay(1000);
+  delay(750);
 }
 
 void publishData(const char *message)

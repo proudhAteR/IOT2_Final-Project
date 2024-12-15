@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "Service.ino"
+#include "Signal.ino"
 #include <MFRC522.h>
 #include "SPI.h"
 
