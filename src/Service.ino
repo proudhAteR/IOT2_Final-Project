@@ -9,8 +9,8 @@
 #include <ESP32Time.h>
 
 const char *NO_CLASS_MESSAGE = "No ongoing class found";
-const int MAX_CLASSES = 2; // Limit the number of classes for safety
-const int BUFFER_SIZE = 256; // Define a consistent buffer size
+const int MAX_CLASSES = 2;
+const int BUFFER_SIZE = 256;
 
 typedef struct
 {
@@ -22,7 +22,7 @@ typedef struct
 // Function declarations
 void connectToNetwork(const char *ssid, const char *password);
 void connectToBroker(PubSubClient &client, Service *service);
-void subscribeAndPublish(PubSubClient &client, const char *topic, const char *message);
+void subscribe(PubSubClient &client, const char *topic);
 const char *getTopic(Service *service);
 bool isOngoingClass(int index, Service *service);
 bool isInClassRange(Course &course, int currentHour);
@@ -66,9 +66,9 @@ void connectToBroker(PubSubClient &client, Service *service)
         if (client.connect(esp_id, username, password))
         {
             const char *topic = getTopic(service);
-            if (strcmp(topic, NO_CLASS_MESSAGE) != 0) // Ensure topic is valid
+            if (strcmp(topic, NO_CLASS_MESSAGE) != 0) 
             {
-                subscribeAndPublish(client, topic, esp_id);
+                subscribe(client, topic);
             }
             Serial.println(topic);
         }
@@ -79,12 +79,10 @@ void connectToBroker(PubSubClient &client, Service *service)
     }
 }
 
-void subscribeAndPublish(PubSubClient &client, const char *topic, const char *message)
+void subscribe(PubSubClient &client, const char *topic)
 {
     client.subscribe(topic);
     Serial.println("Subscribed to topic");
-    client.publish(topic, message);
-    Serial.println("Published message");
 }
 
 void handleConnectionError()
@@ -109,7 +107,8 @@ const char *getTopic(Service *service)
 
 bool isOngoingClass(int index, Service *service)
 {
-    if (index < 0 || index >= MAX_CLASSES) return false; // Prevent invalid index access
+    if (index < 0 || index >= MAX_CLASSES)
+        return false; // Prevent invalid index access
     return isInClassRange(service->classes[index], getCurrentHour()) &&
            isSameDay(service->classes[index], getCurrentWeekDay());
 }
@@ -128,7 +127,8 @@ int getCurrentWeekDay()
 {
     time_t currentTime = time(0);
     struct tm *now = localtime(&currentTime);
-    if (now == nullptr) return -1; // Ensure valid pointer
+    if (now == nullptr)
+        return -1; // Ensure valid pointer
     return now->tm_wday;
 }
 
@@ -136,7 +136,8 @@ int getCurrentHour()
 {
     time_t currentTime = time(0);
     struct tm *now = localtime(&currentTime);
-    if (now == nullptr) return -1; // Ensure valid pointer
+    if (now == nullptr)
+        return -1; // Ensure valid pointer
     return now->tm_hour;
 }
 

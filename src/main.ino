@@ -14,12 +14,15 @@ void setup()
   const char *HOME_PWD = "123456789";
 
   initializeService(&myServ, HOME_NET_NAME, HOME_PWD);
-  connectToBroker(client, &myServ);
   nfc_init();
   signal_setup();
 }
 void loop()
 {
+  if(!client.connected()){
+    connectToBroker(client, &myServ);
+  }
+  
   if (isCardPresent() && canReadUID())
   {
     processCard();
