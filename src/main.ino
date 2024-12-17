@@ -35,7 +35,7 @@ void processCard()
   displayCardType();
 
   String result = readData();
-  if (isMessageValid(result))
+  if (isMessageValid(result) && isclassGoingOn(&myServ))
   {
     handleSuccess(result);
   }

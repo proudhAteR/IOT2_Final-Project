@@ -23,6 +23,7 @@ typedef struct
 void connectToNetwork(const char *ssid, const char *password);
 void connectToBroker(PubSubClient &client, Service *service);
 void subscribe(PubSubClient &client, const char *topic);
+bool isclassGoingOn(Service *service);
 const char *getTopic(Service *service);
 bool isOngoingClass(int index, Service *service);
 bool isInClassRange(Course &course, int currentHour);
@@ -34,8 +35,7 @@ void initializeService(Service *service, const char *ssid, const char *password)
 
 void initializeService(Service *service, const char *ssid, const char *password)
 {
-    // Initialize a single example class
-    service->classes[0] = {"IOT", 6, 4, 23};
+    service->classes[0] = {"IOT", 2, 4, 23};
 
     connectToNetwork(ssid, password);
     configTime((3600 * (-5)), 3600, "pool.ntp.org");
@@ -66,7 +66,7 @@ void connectToBroker(PubSubClient &client, Service *service)
         if (client.connect(esp_id, username, password))
         {
             const char *topic = getTopic(service);
-            if (strcmp(topic, NO_CLASS_MESSAGE) != 0) 
+            if (isclassGoingOn(service))
             {
                 subscribe(client, topic);
             }
@@ -77,6 +77,12 @@ void connectToBroker(PubSubClient &client, Service *service)
             handleConnectionError();
         }
     }
+}
+
+bool isclassGoingOn(Service *service)
+{
+    const char *topic = getTopic(service);
+    return strcmp(topic, NO_CLASS_MESSAGE) != 0;
 }
 
 void subscribe(PubSubClient &client, const char *topic)
@@ -108,7 +114,7 @@ const char *getTopic(Service *service)
 bool isOngoingClass(int index, Service *service)
 {
     if (index < 0 || index >= MAX_CLASSES)
-        return false; // Prevent invalid index access
+        return false;
     return isInClassRange(service->classes[index], getCurrentHour()) &&
            isSameDay(service->classes[index], getCurrentWeekDay());
 }
@@ -128,7 +134,7 @@ int getCurrentWeekDay()
     time_t currentTime = time(0);
     struct tm *now = localtime(&currentTime);
     if (now == nullptr)
-        return -1; // Ensure valid pointer
+        return -1;
     return now->tm_wday;
 }
 
@@ -137,7 +143,7 @@ int getCurrentHour()
     time_t currentTime = time(0);
     struct tm *now = localtime(&currentTime);
     if (now == nullptr)
-        return -1; // Ensure valid pointer
+        return -1;
     return now->tm_hour;
 }
 
